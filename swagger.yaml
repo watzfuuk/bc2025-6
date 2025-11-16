@@ -1,0 +1,118 @@
+openapi: 3.0.0
+info:
+  title: Inventory Service API
+  version: 1.0.0
+  description: A simple API to manage an inventory of items.
+
+paths:
+  /register:
+    post:
+      summary: Register a new item
+      tags: [Inventory]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                inventory_name:
+                  type: string
+                  description: "The name of the item (required)."
+                description:
+                  type: string
+                  description: "A description for the item."
+                photo:
+                  type: string
+                  format: binary
+                  description: "An image file of the item."
+      responses:
+        '201':
+          description: Item created successfully.
+        '400':
+          description: Bad Request, inventory_name is missing.
+
+  /inventory:
+    get:
+      summary: Retrieve a list of all items
+      tags: [Inventory]
+      responses:
+        '200':
+          description: A JSON array of inventory items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+
+  /inventory/{id}:
+    get:
+      summary: Get an item by ID
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The inventory item.
+        '404':
+          description: Item not found.
+    put:
+      summary: Update an item by ID
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Item updated successfully.
+        '404':
+          description: Item not found.
+    delete:
+      summary: Delete an item by ID
+      tags: [Inventory]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item deleted successfully.
+        '404':
+          description: Item not found.
+
+components:
+  schemas:
+    InventoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        name:
+          type: string
+          example: "My Item"
+        description:
+          type: string
+          example: "This is a detailed description."
+        photoUrl:
+          type: string
+          example: "/photos/16252412512-image.jpg"
