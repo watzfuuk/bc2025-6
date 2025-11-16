@@ -1,6 +1,3 @@
-// ==========================================================
-// ФІНАЛЬНА РОБОЧА ВЕРСІЯ index.js
-// ==========================================================
 
 const express = require('express');
 const http = require('http');
@@ -12,7 +9,6 @@ const multer = require('multer');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 
-// --- 1. АРГУМЕНТИ КОМАНДНОГО РЯДКА ---
 program
   .requiredOption('-h, --host <type>', 'Server host')
   .requiredOption('-p, --port <type>', 'Server port')
@@ -24,7 +20,6 @@ const HOST = options.host;
 const PORT = options.port;
 const RELATIVE_UPLOADS_DIR = options.cache; 
 
-// --- 2. СТВОРЕННЯ АБСОЛЮТНОГО ШЛЯХУ ТА ДИРЕКТОРІЇ ---
 const ABSOLUTE_UPLOADS_DIR = path.resolve(__dirname, RELATIVE_UPLOADS_DIR);
 
 if (!fs.existsSync(ABSOLUTE_UPLOADS_DIR)) {
@@ -32,29 +27,21 @@ if (!fs.existsSync(ABSOLUTE_UPLOADS_DIR)) {
   fs.mkdirSync(ABSOLUTE_UPLOADS_DIR, { recursive: true });
 }
 
-// --- ІНІЦІАЛІЗАЦІЯ EXPRESS ---
 const app = express();
 const swaggerDocument = YAML.load('./swagger.yaml');
 
-// --- 3. MIDDLEWARE (ПРОМІЖНЕ ПЗ) ---
-
-// Глобальний логер для діагностики (можна потім видалити)
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] New request: ${req.method} ${req.originalUrl}`);
   next(); 
 });
 
-// Парсери для JSON та URL-encoded даних
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
-// Роздача статичних файлів (фотографій)
 app.use('/photos', express.static(ABSOLUTE_UPLOADS_DIR)); 
 
-// Swagger UI
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Налаштування multer з абсолютним шляхом
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, ABSOLUTE_UPLOADS_DIR);
@@ -66,16 +53,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- 4. БАЗА ДАНИХ В ПАМ'ЯТІ ---
 let inventory = [];
 
-// --- 5. МАРШРУТИ (ЕНДПОІНТИ) ---
-
-// Віддаємо статичні HTML файли
 app.get('/RegisterForm.html', (req, res) => res.sendFile(path.join(__dirname, 'RegisterForm.html')));
 app.get('/SearchForm.html', (req, res) => res.sendFile(path.join(__dirname, 'SearchForm.html')));
 
-// Реєстрація нового предмету
 app.post('/register', upload.single('photo'), (req, res) => {
   console.log('Request reached /register handler. Body:', req.body);
   
@@ -95,11 +77,9 @@ app.post('/register', upload.single('photo'), (req, res) => {
   res.status(201).json(newItem);
 });
 
-// Отримання списку всіх речей
+
 app.get('/inventory', (req, res) => res.status(200).json(inventory));
 
-// ... (решта ваших ендпоінтів: GET /inventory/:id, PUT, DELETE, POST /search) ...
-// (я додам їх сюди для повноти, щоб ви були впевнені)
 
 app.get('/inventory/:id', (req, res) => {
     const item = inventory.find(i => i.id === req.params.id);
@@ -136,7 +116,7 @@ app.post('/search', (req, res) => {
 });
 
 
-// --- 6. ЗАПУСК СЕРВЕРА ---
+
 app.listen(PORT, HOST, () => {
   console.log(`Server is running at http://${HOST}:${PORT}`);
   console.log(`Uploads are stored in: ${ABSOLUTE_UPLOADS_DIR}`);
