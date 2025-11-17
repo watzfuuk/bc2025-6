@@ -1,4 +1,3 @@
-
 const express = require('express');
 const http = require('http');
 const fs = require('fs');
@@ -19,7 +18,6 @@ const options = program.opts();
 const HOST = options.host;
 const PORT = options.port;
 const RELATIVE_UPLOADS_DIR = options.cache; 
-
 const ABSOLUTE_UPLOADS_DIR = path.resolve(__dirname, RELATIVE_UPLOADS_DIR);
 
 if (!fs.existsSync(ABSOLUTE_UPLOADS_DIR)) {
@@ -37,9 +35,7 @@ app.use((req, res, next) => {
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
-
 app.use('/photos', express.static(ABSOLUTE_UPLOADS_DIR)); 
-
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const storage = multer.diskStorage({
@@ -65,21 +61,17 @@ app.post('/register', upload.single('photo'), (req, res) => {
   if (!inventory_name) {
     return res.status(400).json({ message: 'Inventory name is required' });
   }
-
   const newItem = {
     id: uuidv4(),
     name: inventory_name,
     description: description || '',
     photoUrl: req.file ? `/photos/${req.file.filename}` : null
   };
-  
   inventory.push(newItem);
   res.status(201).json(newItem);
 });
 
-
 app.get('/inventory', (req, res) => res.status(200).json(inventory));
-
 
 app.get('/inventory/:id', (req, res) => {
     const item = inventory.find(i => i.id === req.params.id);
@@ -115,7 +107,25 @@ app.post('/search', (req, res) => {
     res.status(200).json(itemResponse);
 });
 
+app.all('/inventory/:id', (req, res) => {
+    res.setHeader('Allow', 'GET, PUT, DELETE');
+    res.status(405).send('Method Not Allowed');
+});
 
+app.all('/register', (req, res) => {
+    res.setHeader('Allow', 'POST');
+    res.status(405).send('Method Not Allowed');
+});
+
+app.all('/inventory', (req, res) => {
+    res.setHeader('Allow', 'GET');
+    res.status(405).send('Method Not Allowed');
+});
+
+app.all('/search', (req, res) => {
+    res.setHeader('Allow', 'POST');
+    res.status(405).send('Method Not Allowed');
+});
 
 app.listen(PORT, HOST, () => {
   console.log(`Server is running at http://${HOST}:${PORT}`);
